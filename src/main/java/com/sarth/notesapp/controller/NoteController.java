@@ -39,6 +39,10 @@ public class NoteController {
     }
 }
 /*
+* Jab bhi kisi object ke andar ka method call karna ho, syntax hota hai:
+
+   objectName.methodName(...)*/
+/*
 * Postman se JSON aati hai
        ↓
 @RequestBody isko Note object mein badalta hai (naam: note)
