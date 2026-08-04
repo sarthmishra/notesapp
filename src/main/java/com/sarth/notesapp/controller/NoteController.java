@@ -3,6 +3,7 @@ package com.sarth.notesapp.controller;
 
 import com.sarth.notesapp.model.Note;
 import com.sarth.notesapp.service.NoteService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,7 +17,7 @@ public class NoteController {
     private NoteService noteService;
 
     @PostMapping
-    public Note createNote(@RequestBody Note note){
+    public Note createNote(@Valid @RequestBody Note note){
         return noteService.createNote(note);
     }
 
@@ -34,7 +35,7 @@ public class NoteController {
         noteService.deleteNote(id);
     }
     @PutMapping("/{id}")
-    public Note updateNote(@PathVariable Long id, @RequestBody Note note){
+    public Note updateNote(@PathVariable Long id, @Valid @RequestBody Note note){
         return noteService.updateNote(id, note);
     }
 }
