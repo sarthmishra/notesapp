@@ -6,8 +6,10 @@ import com.sarth.notesapp.exception.NoteNotFoundException;
 import com.sarth.notesapp.model.Note;
 import com.sarth.notesapp.repository.NoteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
+import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 @Service
@@ -20,13 +22,13 @@ public class NoteService {
         Note note = new Note(requestDTO.title(), requestDTO.content());
         Note savedNote = noteRepository.save(note);
         return toResponseDTO(savedNote);
+        /*"Jo bhi savedNote (entity) hai, usko toResponseDTO function se guzaaro,
+        jo mujhe wapas ek NoteResponseDTO de dega — aur wahi main return kar dunga."*/
     }
 
-    public List<NoteResponseDTO> getAllNotes(){
-        return noteRepository.findAll()
-                .stream()
-                .map(this::toResponseDTO)
-                .toList();
+    public Page<NoteResponseDTO> getAllNotes(Pageable pageable){
+        return noteRepository.findAll(pageable)
+                .map(this::toResponseDTO);
     }
 
     public NoteResponseDTO getNoteById(Long id){

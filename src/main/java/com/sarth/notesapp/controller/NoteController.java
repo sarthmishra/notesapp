@@ -4,10 +4,11 @@ import com.sarth.notesapp.dto.NoteRequestDTO;
 import com.sarth.notesapp.dto.NoteResponseDTO;
 import com.sarth.notesapp.service.NoteService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
-import java.util.List;
 
 @RestController
 @RequestMapping("/notes")
@@ -22,8 +23,8 @@ public class NoteController {
     }
 
     @GetMapping
-    public List<NoteResponseDTO> getAllNotes(){
-        return noteService.getAllNotes();
+    public Page<NoteResponseDTO> getAllNotes(Pageable pageable){
+        return noteService.getAllNotes(pageable);
     }
 
     @GetMapping("/{id}")
@@ -42,7 +43,6 @@ public class NoteController {
     }
 
 }
-
 
 
 
