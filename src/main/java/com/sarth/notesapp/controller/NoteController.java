@@ -1,5 +1,54 @@
 package com.sarth.notesapp.controller;
 
+import com.sarth.notesapp.dto.NoteRequestDTO;
+import com.sarth.notesapp.dto.NoteResponseDTO;
+import com.sarth.notesapp.service.NoteService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import jakarta.validation.Valid;
+import java.util.List;
+
+@RestController
+@RequestMapping("/notes")
+public class NoteController {
+
+    @Autowired
+    private NoteService noteService;
+
+    @PostMapping
+    public NoteResponseDTO createNote(@Valid @RequestBody NoteRequestDTO noteRequestDTO){
+        return noteService.createNote(noteRequestDTO);
+    }
+
+    @GetMapping
+    public List<NoteResponseDTO> getAllNotes(){
+        return noteService.getAllNotes();
+    }
+
+    @GetMapping("/{id}")
+    public NoteResponseDTO getNoteById(@PathVariable Long id){
+        return noteService.getNoteById(id);
+    }
+
+    @PutMapping("/{id}")
+    public NoteResponseDTO updateNote(@PathVariable Long id, @Valid @RequestBody NoteRequestDTO noteRequestDTO){
+        return noteService.updateNote(id, noteRequestDTO);
+    }
+
+    @DeleteMapping("/{id}")
+    public void deleteNote(@PathVariable Long id){
+        noteService.deleteNote(id);
+    }
+
+}
+
+
+
+
+
+/*package com.sarth.notesapp.controller;
+
 
 import com.sarth.notesapp.model.Note;
 import com.sarth.notesapp.service.NoteService;

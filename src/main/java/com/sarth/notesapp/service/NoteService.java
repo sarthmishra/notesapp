@@ -1,5 +1,68 @@
 package com.sarth.notesapp.service;
 
+import com.sarth.notesapp.dto.NoteRequestDTO;
+import com.sarth.notesapp.dto.NoteResponseDTO;
+import com.sarth.notesapp.exception.NoteNotFoundException;
+import com.sarth.notesapp.model.Note;
+import com.sarth.notesapp.repository.NoteRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class NoteService {
+
+    @Autowired
+    private NoteRepository noteRepository;
+
+    public NoteResponseDTO createNote(NoteRequestDTO requestDTO){
+        Note note = new Note(requestDTO.title(), requestDTO.content());
+        Note savedNote = noteRepository.save(note);
+        return toResponseDTO(savedNote);
+    }
+
+    public List<NoteResponseDTO> getAllNotes(){
+        return noteRepository.findAll()
+                .stream()
+                .map(this::toResponseDTO)
+                .toList();
+    }
+
+    public NoteResponseDTO getNoteById(Long id){
+        Note note = noteRepository.findById(id)
+                .orElseThrow(() -> new NoteNotFoundException("Note with id " + id + " not found"));
+        return toResponseDTO(note);
+    }
+
+    public NoteResponseDTO updateNote(Long id, NoteRequestDTO requestDTO){
+        Note existingNote = noteRepository.findById(id)
+                .orElseThrow(() -> new NoteNotFoundException("Note with id " + id + " not found"));
+
+        existingNote.setTitle(requestDTO.title());
+        existingNote.setContent(requestDTO.content());
+
+        Note updatedNote = noteRepository.save(existingNote);
+        return toResponseDTO(updatedNote);
+    }
+
+    public void deleteNote(Long id){
+        if(!noteRepository.existsById(id)){
+            throw new NoteNotFoundException("Note with id " + id + " not found");
+        }
+        noteRepository.deleteById(id);
+    }
+
+    private NoteResponseDTO toResponseDTO(Note note) {
+        return new NoteResponseDTO(note.getId(), note.getTitle(), note.getContent());
+    }
+
+}
+
+
+
+/*package com.sarth.notesapp.service;
+
 import com.sarth.notesapp.exception.NoteNotFoundException;
 import com.sarth.notesapp.model.Note;
 import com.sarth.notesapp.repository.NoteRepository;
@@ -44,3 +107,4 @@ public class NoteService {
         return noteRepository.save(existingNote);
     }
 }
+*/
