@@ -1,10 +1,7 @@
 package com.sarth.notesapp.model;
 
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
@@ -19,6 +16,8 @@ public class Note {
     private String title;
     @NotBlank(message = "Content cannot be empty")
     private String content;
+    @ManyToOne
+    private User owner;
 
     public Note(){
 
@@ -51,6 +50,14 @@ public class Note {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public User getOwner() {
+        return owner;
+    }
+
+    public void setOwner(User owner) {
+        this.owner = owner;
     }
 }
 /*
