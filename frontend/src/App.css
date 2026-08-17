@@ -827,4 +827,7 @@ textarea:focus {
   .auth-panel {
     padding: 30px 24px;
   }
+  .auth-switch {
+    margin-top: 28px;
+  }
 }

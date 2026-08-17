@@ -23,14 +23,28 @@ function App() {
   const [success, setSuccess] = useState("");
 
   const [loginLoading, setLoginLoading] = useState(false);
+  const [registerLoading, setRegisterLoading] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(null);
+
+  // Register screen
+  const [showRegister, setShowRegister] = useState(false);
+  const [registerUsername, setRegisterUsername] = useState("");
+  const [registerPassword, setRegisterPassword] = useState("");
+
+  // --------------------------------------------------
+  // LOAD NOTES WHEN TOKEN EXISTS
+  // --------------------------------------------------
 
   useEffect(() => {
     if (token) {
       fetchNotes(token);
     }
   }, [token]);
+
+  // --------------------------------------------------
+  // FETCH NOTES
+  // --------------------------------------------------
 
   const fetchNotes = async (jwt) => {
     try {
@@ -57,6 +71,10 @@ function App() {
       setError("Could not connect to the server.");
     }
   };
+
+  // --------------------------------------------------
+  // LOGIN
+  // --------------------------------------------------
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -93,6 +111,60 @@ function App() {
       setLoginLoading(false);
     }
   };
+
+  // --------------------------------------------------
+  // REGISTER
+  // --------------------------------------------------
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+
+    setError("");
+    setSuccess("");
+    setRegisterLoading(true);
+
+    try {
+      const response = await fetch(`${API_URL}/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: registerUsername.trim(),
+          password: registerPassword,
+        }),
+      });
+
+      const data = await response.text();
+
+      if (!response.ok) {
+        setError(data || "Registration failed.");
+        return;
+      }
+
+      // Put registered username into login form
+      setUsername(registerUsername.trim());
+      setPassword("");
+
+      // Clear registration fields
+      setRegisterUsername("");
+      setRegisterPassword("");
+
+      // Return to login
+      setShowRegister(false);
+
+      setSuccess("Account created successfully. Please sign in.");
+    } catch (error) {
+      console.error(error);
+      setError("Could not connect to the server.");
+    } finally {
+      setRegisterLoading(false);
+    }
+  };
+
+  // --------------------------------------------------
+  // CREATE NOTE
+  // --------------------------------------------------
 
   const handleCreateNote = async (e) => {
     e.preventDefault();
@@ -145,6 +217,10 @@ function App() {
     }
   };
 
+  // --------------------------------------------------
+  // DELETE NOTE
+  // --------------------------------------------------
+
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this note permanently?")) {
       return;
@@ -185,19 +261,32 @@ function App() {
     }
   };
 
+  // --------------------------------------------------
+  // START EDITING
+  // --------------------------------------------------
+
   const startEditing = (note) => {
     setEditingId(note.id);
     setEditTitle(note.title);
     setEditContent(note.content);
+
     setError("");
     setSuccess("");
   };
+
+  // --------------------------------------------------
+  // CANCEL EDIT
+  // --------------------------------------------------
 
   const cancelEditing = () => {
     setEditingId(null);
     setEditTitle("");
     setEditContent("");
   };
+
+  // --------------------------------------------------
+  // UPDATE NOTE
+  // --------------------------------------------------
 
   const handleUpdate = async (id) => {
     if (!editTitle.trim() || !editContent.trim()) {
@@ -241,6 +330,7 @@ function App() {
       );
 
       cancelEditing();
+
       setSuccess("Note updated.");
     } catch (error) {
       console.error(error);
@@ -249,6 +339,10 @@ function App() {
       setActionLoading(null);
     }
   };
+
+  // --------------------------------------------------
+  // LOGOUT
+  // --------------------------------------------------
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -266,6 +360,10 @@ function App() {
     setSuccess("");
   };
 
+  // --------------------------------------------------
+  // SEARCH
+  // --------------------------------------------------
+
   const filteredNotes = useMemo(() => {
     const query = search.trim().toLowerCase();
 
@@ -280,11 +378,111 @@ function App() {
     );
   }, [notes, search]);
 
-  /* =========================
-     LOGIN
-     ========================= */
+  // ==================================================
+  // LOGIN / REGISTER
+  // ==================================================
 
   if (!token) {
+    // ------------------------------------------------
+    // REGISTER SCREEN
+    // ------------------------------------------------
+
+    if (showRegister) {
+      return (
+          <div className="auth-page">
+            <div className="auth-panel">
+              <div className="brand-mark">N</div>
+
+              <p className="eyebrow">PERSONAL NOTES</p>
+
+              <h1>Create your account.</h1>
+
+              <p className="auth-description">
+                Start keeping the things worth remembering.
+              </p>
+
+              <form
+                  className="auth-form"
+                  onSubmit={handleRegister}
+              >
+                <div className="field">
+                  <label>Username</label>
+
+                  <input
+                      type="text"
+                      value={registerUsername}
+                      onChange={(e) =>
+                          setRegisterUsername(e.target.value)
+                      }
+                      placeholder="Choose a username"
+                      required
+                  />
+                </div>
+
+                <div className="field">
+                  <label>Password</label>
+
+                  <input
+                      type="password"
+                      value={registerPassword}
+                      onChange={(e) =>
+                          setRegisterPassword(e.target.value)
+                      }
+                      placeholder="Choose a password"
+                      required
+                  />
+                </div>
+
+                <button
+                    className="primary-button full-width"
+                    type="submit"
+                    disabled={registerLoading}
+                >
+                  {registerLoading
+                      ? "Creating account..."
+                      : "Create account"}
+                </button>
+              </form>
+
+              {error && (
+                  <div className="message error">
+                    {error}
+                  </div>
+              )}
+
+              {success && (
+                  <div className="message success">
+                    {success}
+                  </div>
+              )}
+
+              <p className="auth-switch">
+                Already have an account?{" "}
+                <button
+                    type="button"
+                    className="link-button"
+                    onClick={() => {
+                      setShowRegister(false);
+                      setError("");
+                      setSuccess("");
+                    }}
+                >
+                  Sign in
+                </button>
+              </p>
+
+              <p className="auth-footer">
+                React · Spring Boot · PostgreSQL
+              </p>
+            </div>
+          </div>
+      );
+    }
+
+    // ------------------------------------------------
+    // LOGIN SCREEN
+    // ------------------------------------------------
+
     return (
         <div className="auth-page">
           <div className="auth-panel">
@@ -298,15 +496,20 @@ function App() {
               A quiet place for the things worth remembering.
             </p>
 
-            <form className="auth-form" onSubmit={handleLogin}>
+            <form
+                className="auth-form"
+                onSubmit={handleLogin}
+            >
               <div className="field">
                 <label>Username</label>
 
                 <input
                     type="text"
                     value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    placeholder="sarth"
+                    onChange={(e) =>
+                        setUsername(e.target.value)
+                    }
+                    placeholder="Enter your UserName "
                     required
                 />
               </div>
@@ -317,8 +520,10 @@ function App() {
                 <input
                     type="password"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
+                    onChange={(e) =>
+                        setPassword(e.target.value)
+                    }
+                    placeholder="Enter your password"
                     required
                 />
               </div>
@@ -328,7 +533,9 @@ function App() {
                   type="submit"
                   disabled={loginLoading}
               >
-                {loginLoading ? "Signing in..." : "Sign in"}
+                {loginLoading
+                    ? "Signing in..."
+                    : "Sign in"}
               </button>
             </form>
 
@@ -338,6 +545,27 @@ function App() {
                 </div>
             )}
 
+            {success && (
+                <div className="message success">
+                  {success}
+                </div>
+            )}
+
+            <p className="auth-switch">
+              Don't have an account?{" "}
+              <button
+                  type="button"
+                  className="link-button"
+                  onClick={() => {
+                    setShowRegister(true);
+                    setError("");
+                    setSuccess("");
+                  }}
+              >
+                Create one
+              </button>
+            </p>
+
             <p className="auth-footer">
               React · Spring Boot · PostgreSQL
             </p>
@@ -346,9 +574,9 @@ function App() {
     );
   }
 
-  /* =========================
-     MAIN APP
-     ========================= */
+  // ==================================================
+  // MAIN NOTES APP
+  // ==================================================
 
   return (
       <div className="app-shell">
@@ -362,13 +590,20 @@ function App() {
               <div className="small-mark">N</div>
 
               <div>
-                <span className="app-name">Notes</span>
-                <span className="app-label">PERSONAL</span>
+              <span className="app-name">
+                Notes
+              </span>
+
+                <span className="app-label">
+                PERSONAL
+              </span>
               </div>
             </div>
 
             <div className="account">
-              <span>{username || "sarth"}</span>
+            <span>
+              {username || "sarth"}
+            </span>
 
               <button
                   className="logout-button"
@@ -388,9 +623,13 @@ function App() {
           <aside className="composer">
 
             <div className="composer-heading">
-              <p className="eyebrow">NEW NOTE</p>
+              <p className="eyebrow">
+                NEW NOTE
+              </p>
 
-              <h2>What's on your mind?</h2>
+              <h2>
+                What's on your mind?
+              </h2>
 
               <p>
                 Write something down before it disappears.
@@ -405,7 +644,9 @@ function App() {
                 <input
                     type="text"
                     value={title}
-                    onChange={(e) => setTitle(e.target.value)}
+                    onChange={(e) =>
+                        setTitle(e.target.value)
+                    }
                     placeholder="A thought worth keeping"
                     maxLength={100}
                 />
@@ -416,14 +657,21 @@ function App() {
 
                 <textarea
                     value={content}
-                    onChange={(e) => setContent(e.target.value)}
+                    onChange={(e) =>
+                        setContent(e.target.value)
+                    }
                     placeholder="Start writing..."
                     maxLength={255}
                 />
 
                 <div className="field-footer">
-                  <span>Markdown coming later</span>
-                  <span>{content.length}/255</span>
+                <span>
+                  Markdown coming later
+                </span>
+
+                  <span>
+                  {content.length}/255
+                </span>
                 </div>
               </div>
 
@@ -432,7 +680,9 @@ function App() {
                   type="submit"
                   disabled={createLoading}
               >
-                {createLoading ? "Saving..." : "Save note"}
+                {createLoading
+                    ? "Saving..."
+                    : "Save note"}
               </button>
 
             </form>
@@ -449,7 +699,7 @@ function App() {
 
           <section className="notes-area">
 
-            {/* USER CONTROLS ABOVE NOTES */}
+            {/* ACCOUNT */}
 
             <div className="notes-account">
             <span className="signed-in">
@@ -473,27 +723,41 @@ function App() {
             <div className="notes-toolbar">
 
               <div className="notes-heading">
-                <p className="eyebrow">YOUR SPACE</p>
+
+                <p className="eyebrow">
+                  YOUR SPACE
+                </p>
 
                 <div className="notes-title-row">
-                  <h2>Your notes</h2>
+
+                  <h2>
+                    Your notes
+                  </h2>
 
                   <span className="note-count">
                   {notes.length}
                 </span>
+
                 </div>
+
               </div>
 
               <div className="search-box">
+
                 <input
                     type="search"
                     value={search}
-                    onChange={(e) => setSearch(e.target.value)}
+                    onChange={(e) =>
+                        setSearch(e.target.value)
+                    }
                     placeholder="Search notes..."
                 />
+
               </div>
 
             </div>
+
+            {/* MESSAGES */}
 
             {error && (
                 <div className="message error">
@@ -507,24 +771,39 @@ function App() {
                 </div>
             )}
 
+            {/* NOTES */}
+
             {filteredNotes.length === 0 ? (
 
                 <div className="empty-state">
-                  <div className="empty-icon">—</div>
+
+                  <div className="empty-icon">
+                    —
+                  </div>
 
                   {search ? (
                       <>
-                        <h3>No matching notes</h3>
-                        <p>Try a different search term.</p>
+                        <h3>
+                          No matching notes
+                        </h3>
+
+                        <p>
+                          Try a different search term.
+                        </p>
                       </>
                   ) : (
                       <>
-                        <h3>Nothing here yet.</h3>
+                        <h3>
+                          Nothing here yet.
+                        </h3>
+
                         <p>
-                          Your first note is waiting to be written.
+                          Your first note is waiting
+                          to be written.
                         </p>
                       </>
                   )}
+
                 </div>
 
             ) : (
@@ -543,23 +822,31 @@ function App() {
                             <div className="edit-mode">
 
                               <div className="field">
-                                <label>Title</label>
+                                <label>
+                                  Title
+                                </label>
 
                                 <input
                                     value={editTitle}
                                     onChange={(e) =>
-                                        setEditTitle(e.target.value)
+                                        setEditTitle(
+                                            e.target.value
+                                        )
                                     }
                                 />
                               </div>
 
                               <div className="field">
-                                <label>Note</label>
+                                <label>
+                                  Note
+                                </label>
 
                                 <textarea
                                     value={editContent}
                                     onChange={(e) =>
-                                        setEditContent(e.target.value)
+                                        setEditContent(
+                                            e.target.value
+                                        )
                                     }
                                 />
                               </div>
@@ -569,10 +856,17 @@ function App() {
                                 <button
                                     className="primary-button small"
                                     onClick={() =>
-                                        handleUpdate(note.id)
+                                        handleUpdate(
+                                            note.id
+                                        )
+                                    }
+                                    disabled={
+                                        actionLoading ===
+                                        `edit-${note.id}`
                                     }
                                 >
-                                  {actionLoading === `edit-${note.id}`
+                                  {actionLoading ===
+                                  `edit-${note.id}`
                                       ? "Saving..."
                                       : "Save changes"}
                                 </button>
@@ -591,18 +885,24 @@ function App() {
                         ) : (
 
                             <>
-
                               <div className="note-card-top">
+
                         <span className="note-number">
-                          {String(note.id).padStart(2, "0")}
+                          {String(note.id).padStart(
+                              2,
+                              "0"
+                          )}
                         </span>
 
                                 <span className="note-status">
                           SAVED
                         </span>
+
                               </div>
 
-                              <h3>{note.title}</h3>
+                              <h3>
+                                {note.title}
+                              </h3>
 
                               <p className="note-content">
                                 {note.content}
@@ -622,16 +922,22 @@ function App() {
                                 <button
                                     className="delete-button"
                                     onClick={() =>
-                                        handleDelete(note.id)
+                                        handleDelete(
+                                            note.id
+                                        )
+                                    }
+                                    disabled={
+                                        actionLoading ===
+                                        `delete-${note.id}`
                                     }
                                 >
-                                  {actionLoading === `delete-${note.id}`
+                                  {actionLoading ===
+                                  `delete-${note.id}`
                                       ? "Deleting..."
                                       : "Delete"}
                                 </button>
 
                               </div>
-
                             </>
 
                         )}
@@ -647,6 +953,7 @@ function App() {
           </section>
 
         </main>
+
       </div>
   );
 }
